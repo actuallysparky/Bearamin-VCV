@@ -1,4 +1,4 @@
-<!-- {"canonical_sha256": "e7f24d4934cab28135cc2f496e19410dbccf5a8a83d97e0ba74440e816d474d8", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
+<!-- {"canonical_sha256": "8b2481489d37a4ecfdaa05d80a17689d52ef9b1b9667a81f6ad19cc108425da4", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
 
 # Bearamin for VCV Rack
 
@@ -59,6 +59,8 @@ With Python 3, a C++17 compiler, `pkg-config`, Jansson and `zstd` installed:
 ./test.sh --rack /absolute/path/to/Rack-SDK
 python3 tools/check_package.py dist/Bearamin-2.1.0-<platform>.vcvplugin
 ```
+
+On Windows, running the SDK tests also requires the matching Rack `libRack.dll` on `PATH`; the SDK itself includes only its import library. CI extracts that DLL from the official Rack Free installer without running the installer.
 
 The SDK test exercises the actual module classes without opening a hardware port. Connected sensor operation and musical use require a live check in Rack.
 

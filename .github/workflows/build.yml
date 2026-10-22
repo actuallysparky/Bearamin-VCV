@@ -59,6 +59,11 @@ jobs:
           mkdir -p _local/sdk
           curl --fail --location --retry 3 "https://vcvrack.com/downloads/Rack-SDK-${RACK_SDK_VERSION}-win-x64.zip" -o _local/sdk.zip
           unzip -q _local/sdk.zip -d _local/sdk
+          # The Windows SDK has an import library, not the runtime DLL.
+          # Extract only that DLL; never execute/install the downloaded installer.
+          curl --fail --location --retry 3 "https://vcvrack.com/downloads/RackFree-${RACK_SDK_VERSION}-win-x64.exe" -o _local/RackFree.exe
+          "/c/Program Files/7-Zip/7z.exe" e _local/RackFree.exe libRack.dll -o_local/sdk/Rack-SDK -y
+          test -f _local/sdk/Rack-SDK/libRack.dll
           ./test.sh --rack "$PWD/_local/sdk/Rack-SDK"
           make -j2 dist RACK_DIR="$PWD/_local/sdk/Rack-SDK"
           python3 tools/check_package.py dist/*.vcvplugin

@@ -1,4 +1,4 @@
-<!-- {"canonical_sha256": "f6a92805aa194e5df044548369280b50167e318798a93bd7908569a84ae137f6", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
+<!-- {"canonical_sha256": "08f76c19d36b6c97ed621c18dd0f84f95e9d815d607b3b988c23724fc035f645", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
 
 # Bearamin for VCV Rack
 

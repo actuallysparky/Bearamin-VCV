@@ -13,11 +13,11 @@ The physical [Bearamin Lite](https://github.com/actuallysparky/bearamin/tree/mai
 
 ## SloFO
 
-Tap the encoder to select Minutes, Hours, Days or Months. Drag vertically or scroll to change the period: 1–60 minutes, 1–24 hours, 1–64 days in half-day steps, or 1–64 fixed 30-day months. A month is exactly 30 days.
+Tap the encoder to select Minutes, Hours, Days or Months. Drag vertically or scroll to change the period: 1–60 minutes, 1–24 hours, 1–64 days in half-day steps, or 1–64 fixed 30-day months. A month is exactly 30 days. Hey, don't look to a bear if you wanna tell hyooman time.
 
 Hold for 0.5 seconds to preview the voltage mode; keep holding to two seconds to switch between 0–5 V and −5–5 V. All three outputs share one phase. The matrix shows the edit selection, then returns to the waveform display after two seconds.
 
-SloFO starts immediately. There is no reserve-capacitor charging animation or delay. The context menu offers time acceleration, phase selection and simulated power off/on. Power off gives zero outputs and pauses the phase; power on resumes immediately from that phase. Saved phase, period, selected unit, voltage mode and time acceleration remain supported.
+SloFO starts immediately. The context menu offers phase selection. Power off gives zero outputs and pauses the phase; power on resumes immediately from that phase. Saved phase, period, selected unit, voltage mode and time acceleration remain supported.
 
 ## Bearamin Lite, powered by Bearamin Virtual
 

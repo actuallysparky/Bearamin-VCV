@@ -1,4 +1,4 @@
-<!-- {"canonical_sha256": "8b2481489d37a4ecfdaa05d80a17689d52ef9b1b9667a81f6ad19cc108425da4", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
+<!-- {"canonical_sha256": "f6a92805aa194e5df044548369280b50167e318798a93bd7908569a84ae137f6", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
 
 # Bearamin for VCV Rack
 
@@ -36,7 +36,7 @@ make dist RACK_DIR=/absolute/path/to/Rack-SDK
 
 The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.0-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Bearamin Lite**.
 
-Linux packages built on Ubuntu 22.04 require glibc 2.34 or later. Windows x64, Linux x64, Intel Mac and Apple Silicon Mac builds are covered by the build workflow.
+Linux packages built on Ubuntu 22.04 require glibc 2.35 or later. Windows x64, Linux x64, Intel Mac and Apple Silicon Mac builds are covered by the build workflow.
 
 ## Existing patches and presets
 

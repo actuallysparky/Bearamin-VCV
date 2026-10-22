@@ -1,0 +1,12 @@
+/AGENTS.md
+/.agents/
+/.codex/
+/_local/
+/build/
+/dist/
+/plugin.dylib
+/plugin.so
+/plugin.dll
+__pycache__/
+*.pyc
+.DS_Store

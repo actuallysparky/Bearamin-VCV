@@ -5,7 +5,11 @@ mkdir -p _local/tests
 python3 -m unittest discover -s tests -p 'test_*.py' -v
 if [[ ${1:-} == --rack ]]; then
     rack_sdk="$(cd "${2:?Supply the Rack SDK directory}" && pwd)"
-    "${CXX:-c++}" -std=c++17 -I"$rack_sdk/include" -I"$rack_sdk/dep/include" \
+    sdk_flags=(-D_USE_MATH_DEFINES)
+    case "$(uname -m)" in
+        x86_64|AMD64) sdk_flags+=(-march=nehalem) ;;
+    esac
+    "${CXX:-c++}" -std=c++17 "${sdk_flags[@]}" -I"$rack_sdk/include" -I"$rack_sdk/dep/include" \
         -Ithird_party/bearfield-core/include tests/test_modules.cpp -L"$rack_sdk" -lRack \
         -o _local/tests/modules
     PATH="$rack_sdk:$PATH" DYLD_LIBRARY_PATH="$rack_sdk${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" \

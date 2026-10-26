@@ -11,6 +11,9 @@ static void closeTo(double actual, double expected, double tolerance = 1e-5) {
 }
 
 int main() {
+    Context context;
+    context.engine = new engine::Engine;
+    contextSet(&context);
     Plugin collection;
     json_error_t error{};
     json_t* manifest = json_load_file("plugin.json", 0, &error);
@@ -18,11 +21,40 @@ int main() {
     collection.fromJson(manifest);
     init(&collection);
     collection.modulesFromJson(json_object_get(manifest, "modules"));
-    assert(collection.slug == "Bearamin" && collection.models.size() == 2);
+    assert(collection.slug == "Bearamin" && collection.models.size() == 3);
     assert(collection.getModel("SlowLFO") == modelSlowLFO);
     assert(collection.getModel("BearaminVirtual") == modelBearaminVirtual);
     assert(modelSlowLFO->name == "SloFO");
-    assert(modelBearaminVirtual->name == "Bearamin Lite");
+    assert(collection.getModel("Virtual") == modelVirtual);
+    assert(modelVirtual->name == "Lite" && !modelVirtual->hidden);
+    assert(modelBearaminVirtual->hidden);
+    assert(modelSlowLFO->modularGridUrl == "https://modulargrid.net/e/hive-mind-synthesis-slofo");
+    assert(modelVirtual->modularGridUrl == "https://modulargrid.net/e/hive-mind-synthesis-bearamin-lite");
+
+    plugin::plugins.push_back(&collection);
+
+    // Resolve both collection identifiers through Rack's actual model registry.
+    // Round-tripping uses the normal JSON loader and keeps the original slug.
+    for (const char* slug : {"BearaminVirtual", "Virtual"}) {
+        assert(plugin::getModel("Bearamin", slug) == collection.getModel(slug));
+        auto* model = plugin::getModel("Bearamin", slug);
+        auto* restored = dynamic_cast<BearaminVirtual*>(model->createModule());
+        assert(restored);
+        restored->stopping.store(true);
+        restored->worker.join();
+        json_t* old = json_pack("{s:s,s:s,s:I,s:[{s:i,s:f}],s:{s:s,s:i,s:b,s:b}}",
+            "plugin", "Bearamin", "model", slug, "id", json_int_t(9),
+            "params", "id", 0, "value", 0.7,
+            "data", "port", "", "rotation", 2, "mirrorX", 1, "mirrorY", 0);
+        restored->fromJson(old);
+        json_t* savedModule = restored->toJson();
+        assert(std::string(json_string_value(json_object_get(savedModule, "model"))) == slug);
+        assert(json_integer_value(json_object_get(savedModule, "id")) == 9);
+        assert(json_equal(json_object_get(old, "data"), json_object_get(savedModule, "data")));
+        closeTo(restored->params[0].getValue(), 0.7);
+        json_decref(savedModule); json_decref(old);
+        delete restored;
+    }
 
     Module::ProcessArgs args{};
     args.sampleRate = 48000.f;
@@ -106,6 +138,7 @@ int main() {
     json_t* orientationCopy = lite.dataToJson();
     assert(json_equal(orientation, orientationCopy));
     json_decref(orientationCopy); json_decref(orientation);
+    plugin::plugins.clear();
     json_decref(roundtrip); json_decref(saved); json_decref(manifest);
     std::cout << "Actual Rack modules: registration, immediate start/resume, saved state, CV and fault/stale checks passed\n";
 }

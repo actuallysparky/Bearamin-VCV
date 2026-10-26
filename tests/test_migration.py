@@ -24,11 +24,12 @@ class MigrationTests(unittest.TestCase):
             {"id": 12, "plugin": "Other", "model": "SlowLFO", "data": {"plugin": "SlowLFOPrototype"}}],
             "cables": [{"outputModuleId": 4, "outputId": 2, "inputModuleId": 12, "inputId": 0}]}
 
-    def test_only_the_two_plugin_identifiers_change(self):
+    def test_only_recognized_identifiers_change(self):
         original = self.fixture()
         revised, count = migration.migrate_json(json.dumps(original))
         expected = copy.deepcopy(original)
         expected["modules"][0]["plugin"] = expected["modules"][1]["plugin"] = "Bearamin"
+        expected["modules"][1]["model"] = "Virtual"
         self.assertEqual(count, 2)
         self.assertEqual(json.loads(revised), expected)
 
@@ -36,8 +37,21 @@ class MigrationTests(unittest.TestCase):
         preset = self.fixture()["modules"][1]
         result, count = migration.migrate_json(json.dumps(preset))
         self.assertEqual(count, 1)
-        expected = dict(preset, plugin="Bearamin")
+        expected = dict(preset, plugin="Bearamin", model="Virtual")
         self.assertEqual(json.loads(result), expected)
+
+    def test_collection_legacy_and_current_forms(self):
+        old = dict(self.fixture()["modules"][1], plugin="Bearamin")
+        current = dict(old, model="Virtual")
+        payload = {"modules": [old, current, {"plugin": "Other", "model": "BearaminVirtual"}]}
+        result, count = migration.migrate_json(json.dumps(payload))
+        self.assertEqual(count, 1)
+        expected = copy.deepcopy(payload)
+        expected["modules"][0]["model"] = "Virtual"
+        self.assertEqual(json.loads(result), expected)
+        again, count = migration.migrate_json(result)
+        self.assertEqual(count, 0)
+        self.assertEqual(json.loads(again), expected)
 
     def test_original_and_existing_output_are_protected(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -11,7 +11,8 @@ import tarfile
 
 LEGACY = {
     ("SlowLFOPrototype", "SlowLFO"): ("Bearamin", "SlowLFO"),
-    ("BearaminVirtual", "BearaminVirtual"): ("Bearamin", "BearaminVirtual"),
+    ("BearaminVirtual", "BearaminVirtual"): ("Bearamin", "Virtual"),
+    ("Bearamin", "BearaminVirtual"): ("Bearamin", "Virtual"),
 }
 ZSTD_MAGIC = b"\x28\xb5\x2f\xfd"
 

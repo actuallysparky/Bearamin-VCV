@@ -4,4 +4,5 @@
 using namespace rack;
 extern Plugin* pluginInstance;
 extern Model* modelSlowLFO;
+extern Model* modelVirtual;
 extern Model* modelBearaminVirtual;

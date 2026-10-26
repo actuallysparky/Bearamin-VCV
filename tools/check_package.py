@@ -28,7 +28,8 @@ def main():
         for relative in ("plugin.json", "LICENSE", "LICENSE-BEARFIELD", "res/SlowLFO.svg", "res/BearaminVirtual.svg"):
             assert archive.extractfile(f"{slug}/{relative}").read() == (root / relative).read_bytes(), relative
     assert {(m["slug"], m["name"]) for m in manifest["modules"]} == {
-        ("SlowLFO", "SloFO"), ("BearaminVirtual", "Bearamin Lite")}
+        ("SlowLFO", "SloFO"), ("Virtual", "Lite"), ("BearaminVirtual", "Lite (legacy)")}
+    assert [m["slug"] for m in manifest["modules"] if m.get("hidden")] == ["BearaminVirtual"]
     print(f"Verified {args.package.name}: both modules, binary, artwork and GPL/MIT notices")
 
 

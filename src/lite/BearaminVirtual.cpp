@@ -294,4 +294,6 @@ struct BearaminVirtualWidget : ModuleWidget {
         menu->addChild(createCheckMenuItem("Mirror Y","",[m]{return m->mirrorY.load();},[m]{m->mirrorY.store(!m->mirrorY.load());}));
     }
 };
+Model* modelVirtual=createModel<BearaminVirtual,BearaminVirtualWidget>("Virtual");
+// Keep the released collection identifier loadable, but hidden from the browser.
 Model* modelBearaminVirtual=createModel<BearaminVirtual,BearaminVirtualWidget>("BearaminVirtual");

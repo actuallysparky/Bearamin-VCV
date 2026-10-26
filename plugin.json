@@ -17,16 +17,28 @@
       "tags": [
         "Low-frequency oscillator",
         "Hardware clone"
-      ]
+      ],
+      "modularGridUrl": "https://modulargrid.net/e/hive-mind-synthesis-slofo"
     },
     {
-      "slug": "BearaminVirtual",
-      "name": "Bearamin Lite",
+      "slug": "Virtual",
+      "name": "Lite",
       "description": "Powered by Bearamin Virtual: USB 8x8 depth sensing, six CVs and Presence/Spank gates",
       "tags": [
         "Controller",
         "External",
         "Hardware clone"
+      ],
+      "modularGridUrl": "https://modulargrid.net/e/hive-mind-synthesis-bearamin-lite"
+    },
+    {
+      "slug": "BearaminVirtual",
+      "name": "Lite (legacy)",
+      "description": "Replaced by Lite (Virtual). Retained to load existing Bearamin collection patches.",
+      "hidden": true,
+      "tags": [
+        "Controller",
+        "External"
       ]
     }
   ]

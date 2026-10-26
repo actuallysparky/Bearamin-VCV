@@ -1,4 +1,4 @@
-<!-- {"canonical_sha256": "08f76c19d36b6c97ed621c18dd0f84f95e9d815d607b3b988c23724fc035f645", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
+<!-- {"canonical_sha256": "229a72964f89f6555349bf1063d7fb65a9c3ea554556f16dfc77dd1460c699ea", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
 
 # Bearamin for VCV Rack
 
@@ -7,9 +7,11 @@ Two modules for slow modulation and optical gesture control, with Bearamin as th
 | Module | What it does | Hardware |
 | --- | --- | --- |
 | SloFO | Phase-aligned sine, triangle and square CV, with an encoder and 8×8 display | Runs entirely in Rack; based on [SloFO](https://github.com/actuallysparky/SloLFO) |
-| Bearamin Lite | Six X/Y/Z CVs and Presence/Spank gates, powered by Bearamin Virtual | Requires a [Bearamin Virtual](https://github.com/actuallysparky/bearamin/tree/main/bearamin-virtual) USB sensor controller |
+| Lite | Six X/Y/Z CVs and Presence/Spank gates, powered by Bearamin Virtual | Requires a [Bearamin Virtual](https://github.com/actuallysparky/bearamin/tree/main/bearamin-virtual) USB sensor controller |
 
 The physical [Bearamin Lite](https://github.com/actuallysparky/bearamin/tree/main/bearamin-lite) has its own sensor, display and CV circuitry. This Rack module presents that style of controls and outputs using the smaller Bearamin Virtual controller as its input. It reads the Virtual serial stream directly; no bridge application is needed.
+
+The hardware listings are [SloFO](https://modulargrid.net/e/hive-mind-synthesis-slofo) and [Bearamin Lite](https://modulargrid.net/e/hive-mind-synthesis-bearamin-lite). Rack prefixes the module names with the collection brand, so Lite appears as **Bearamin Lite**.
 
 ## SloFO
 
@@ -19,9 +21,9 @@ Hold for 0.5 seconds to preview the voltage mode; keep holding to two seconds to
 
 SloFO starts immediately. The context menu offers phase selection. Power off gives zero outputs and pauses the phase; power on resumes immediately from that phase. Saved phase, period, selected unit, voltage mode and time acceleration remain supported.
 
-## Bearamin Lite, powered by Bearamin Virtual
+## Lite, powered by Bearamin Virtual
 
-Connect the RP2040-Zero/VL53L7CX Bearamin Virtual controller, add **Bearamin Lite**, and choose its USB serial port in the module context menu. The depth field appears in the matrix. Range scales the six CVs; Slew smooths them. X/Y/Z have 0–5 V and −5–5 V outputs; Presence and Spank are 0/5 V gates. The panel's HOLD jack is the Spank output.
+Connect the RP2040-Zero/VL53L7CX Bearamin Virtual controller, add **Lite**, and choose its USB serial port in the module context menu. The depth field appears in the matrix. Range scales the six CVs; Slew smooths them. X/Y/Z have 0–5 V and −5–5 V outputs; Presence and Spank are 0/5 V gates. The panel's HOLD jack is the Spank output.
 
 Rotation, mirroring and port selection are saved in the patch. Boot, sensor faults, disconnects and data older than 250 ms force all outputs to zero immediately. Virtual protocol v1 and the existing Bearfield processing are preserved. A fresh valid frame is required after loading a patch. Select a device only in one plugin instance, and close other serial readers before connecting it here. Virtual's separate USB MIDI interface can remain in use by a DAW.
 
@@ -34,13 +36,15 @@ make -j2 RACK_DIR=/absolute/path/to/Rack-SDK
 make dist RACK_DIR=/absolute/path/to/Rack-SDK
 ```
 
-The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.0-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Bearamin Lite**.
+The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.0-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Lite**.
 
 Linux packages built on Ubuntu 22.04 require glibc 2.35 or later. Windows x64, Linux x64, Intel Mac and Apple Silicon Mac builds are covered by the build workflow.
 
 ## Existing patches and presets
 
-The collection uses plugin slug `Bearamin`. The former plugins used `SlowLFOPrototype` and `BearaminVirtual`; Rack treats these as different plugins. Keep the old packages available for existing patches. The original source repositories and released packages remain available at the links above.
+The collection keeps plugin slug `Bearamin`. Its visible module identifiers are `SlowLFO` (SloFO) and `Virtual` (Lite). Existing collection patches using `Bearamin/BearaminVirtual` still load through a hidden compatibility model with the same implementation, parameters, outputs and saved-state keys. Saving such a patch retains its old model identifier; it is not automatically rewritten. The converter below can create a separate copy using `Bearamin/Virtual`.
+
+The former plugins used `SlowLFOPrototype` and `BearaminVirtual`; Rack treats these as different plugins. Keep the old packages available for existing patches. The original source repositories and released packages remain available at the links above.
 
 To make a separate copy of a patch or module preset for the new collection:
 
@@ -48,7 +52,7 @@ To make a separate copy of a patch or module preset for the new collection:
 python3 tools/migrate_patch.py original.vcv bearamin-copy.vcv
 ```
 
-Python 3 and `zstd` are required for Rack 2 compressed patches. Plain JSON patches and module presets are also supported. The tool changes only the two recognized plugin/module identifiers; it preserves module IDs, cables, positions, parameters, saved module data and archive storage files. It refuses to overwrite the original or an existing output file. Open the copy in Rack and verify it before retiring the original. Old charging-duration data is ignored by SloFO.
+Python 3 and `zstd` are required for Rack 2 compressed patches. Plain JSON patches and module presets are also supported. The tool converts the two former standalone plugin/module pairs and the former collection pair `Bearamin/BearaminVirtual` to the current identifiers; it preserves module IDs, cables, positions, parameters, saved module data and archive storage files. It refuses to overwrite the original or an existing output file. Open the copy in Rack and verify it before retiring the original. Old charging-duration data is ignored by SloFO.
 
 ## Tests
 

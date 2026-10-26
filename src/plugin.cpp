@@ -4,5 +4,6 @@ Plugin* pluginInstance;
 void init(Plugin* p) {
     pluginInstance = p;
     p->addModel(modelSlowLFO);
+    p->addModel(modelVirtual);
     p->addModel(modelBearaminVirtual);
 }

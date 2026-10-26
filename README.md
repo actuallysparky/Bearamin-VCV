@@ -1,4 +1,4 @@
-<!-- {"canonical_sha256": "229a72964f89f6555349bf1063d7fb65a9c3ea554556f16dfc77dd1460c699ea", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
+<!-- {"canonical_sha256": "331ea8f6ce367038027ca26f6992bd78808152aeb45145f1fe663272705acb36", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
 
 # Bearamin for VCV Rack
 
@@ -36,7 +36,7 @@ make -j2 RACK_DIR=/absolute/path/to/Rack-SDK
 make dist RACK_DIR=/absolute/path/to/Rack-SDK
 ```
 
-The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.0-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Lite**.
+The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.1-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Lite**.
 
 Linux packages built on Ubuntu 22.04 require glibc 2.35 or later. Windows x64, Linux x64, Intel Mac and Apple Silicon Mac builds are covered by the build workflow.
 
@@ -61,7 +61,7 @@ With Python 3, a C++17 compiler, `pkg-config`, Jansson and `zstd` installed:
 ```sh
 ./test.sh
 ./test.sh --rack /absolute/path/to/Rack-SDK
-python3 tools/check_package.py dist/Bearamin-2.1.0-<platform>.vcvplugin
+python3 tools/check_package.py dist/Bearamin-2.1.1-<platform>.vcvplugin
 ```
 
 On Windows, running the SDK tests also requires the matching Rack `libRack.dll` on `PATH`; the SDK itself includes only its import library. CI extracts that DLL from the official Rack Free installer without running the installer.

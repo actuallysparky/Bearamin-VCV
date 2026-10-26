@@ -6,13 +6,15 @@
 #include <cassert>
 #include <iostream>
 
+rack::engine::Engine* createTestEngine();
+
 static void closeTo(double actual, double expected, double tolerance = 1e-5) {
     assert(std::abs(actual - expected) < tolerance);
 }
 
 int main() {
     Context context;
-    context.engine = new engine::Engine;
+    context.engine = createTestEngine();
     contextSet(&context);
     Plugin collection;
     json_error_t error{};

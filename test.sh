@@ -10,7 +10,7 @@ if [[ ${1:-} == --rack ]]; then
         x86_64|AMD64) sdk_flags+=(-march=nehalem) ;;
     esac
     "${CXX:-c++}" -std=c++17 "${sdk_flags[@]}" -I"$rack_sdk/include" -I"$rack_sdk/dep/include" \
-        -Ithird_party/bearfield-core/include tests/test_modules.cpp -L"$rack_sdk" -lRack \
+        -Ithird_party/bearfield-core/include tests/test_modules.cpp tests/rack_host.cpp -L"$rack_sdk" -lRack \
         -o _local/tests/modules
     PATH="$rack_sdk:$PATH" DYLD_LIBRARY_PATH="$rack_sdk${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" \
         LD_LIBRARY_PATH="$rack_sdk${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" ./_local/tests/modules

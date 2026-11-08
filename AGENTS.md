@@ -5,7 +5,3 @@
 - Run ./test.sh, then the Rack-SDK test mode and make dist with the configured SDK. Keep generated binaries and build products ignored.
 - README and other maintained publication documents must remain consistent with the implementation and preserve upstream and agent-assisted provenance.
 - Do not install into a running Rack session or touch devices during source checks. Library submissions, comments and emails need explicit authorization.
-
-## Agent-assisted collaboration
-
-These instructions make AI-assisted development and review visible. Preserve accurate human, agent and upstream attribution; do not imply sole authorship or manufacture contributor identities. Keep secrets, personal details, device identities and private operational records out of the published source.

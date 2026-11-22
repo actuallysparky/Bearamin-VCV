@@ -14,12 +14,38 @@ inline bool uintField(json_t* root, const char* key, uint64_t max, uint64_t& val
     if (!json_is_integer(j) || json_integer_value(j) < 0 || static_cast<uint64_t>(json_integer_value(j)) > max) return false;
     value = static_cast<uint64_t>(json_integer_value(j)); return true;
 }
+struct DeviceGesture {
+    bool available = false, present = false, presence = false, spank = false;
+    uint16_t x = 0, y = 0, z = 0, centroidX = 0, centroidY = 0;
+    unsigned rotation = 0;
+    bool mirror = false;
+};
+inline bool parseGesture(json_t* object, DeviceGesture& out) {
+    if (!object) return true; // Legacy v1 firmware has raw frames only.
+    uint64_t version = 0, x = 0, y = 0, z = 0, rotation = 0, cx = 0, cy = 0;
+    if (!json_is_object(object) || !uintField(object,"v",1,version) || version != 1 ||
+        !uintField(object,"x",4095,x) || !uintField(object,"y",4095,y) ||
+        !uintField(object,"z",4095,z) || !uintField(object,"rotation",3,rotation) ||
+        !uintField(object,"cx",1000,cx) || !uintField(object,"cy",1000,cy)) return false;
+    for (const char* key : {"present", "presence", "spank", "mirror"})
+        if (!json_is_boolean(json_object_get(object,key))) return false;
+    out.present = json_is_true(json_object_get(object,"present"));
+    out.presence = json_is_true(json_object_get(object,"presence"));
+    out.spank = json_is_true(json_object_get(object,"spank"));
+    if ((out.presence || out.spank) && !out.present) return false;
+    out.x = x; out.y = y; out.z = z; out.rotation = rotation;
+    out.centroidX = cx; out.centroidY = cy;
+    out.mirror = json_is_true(json_object_get(object,"mirror"));
+    out.available = true;
+    return true;
+}
 struct Message {
     bool frame = false;
     State state = SENSOR_INIT;
     uint32_t boot = 0, seq = 0;
     uint64_t capture = 0;
     bearfield::DepthFrame8x8 depth{};
+    DeviceGesture gesture{};
 };
 
 inline bool parseLine(const std::string& line, Message& out, bool& unsupported) {
@@ -39,7 +65,8 @@ inline bool parseLine(const std::string& line, Message& out, bool& unsupported) 
         const char* kind = json_string_value(type);
         if (std::strcmp(kind,"frame") == 0) {
             json_t* cells = json_object_get(root,"mm");
-            valid = json_is_array(cells) && json_array_size(cells) == 64;
+            valid = json_is_array(cells) && json_array_size(cells) == 64 &&
+                parseGesture(json_object_get(root,"gesture"),out.gesture);
             if (valid) {
                 out.frame = true; out.depth.sequence = out.seq; out.depth.capturedUs = capture;
                 for (size_t i = 0; i < 64; ++i) {

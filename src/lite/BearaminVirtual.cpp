@@ -114,9 +114,43 @@ struct Event {
     bearfield::ProcessedFieldState field{};
     std::array<uint16_t,64> mm{};
     int point = -1;
+    bool deviceSettings = false, presenceGate = false;
     Event() = default;
     explicit Event(State s) : state(s) {}
 };
+// Shared by the real serial reader and host module tests.
+Event frameEvent(const Message& message, bool followDevice, int rotation,
+                 bool mirrorX, bool mirrorY, bearfield::Processor& processor) {
+    Event event{};
+    event.state = STREAMING;
+    event.deviceSettings = followDevice && message.gesture.available;
+    bearfield::SensorMountConfig mount{};
+    mount.rawToCanonical.rotation = static_cast<bearfield::QuarterTurns>(
+        event.deviceSettings ? message.gesture.rotation : rotation);
+    mount.rawToCanonical.mirrorX = event.deviceSettings ? message.gesture.mirror : mirrorX;
+    mount.rawToCanonical.mirrorY = event.deviceSettings ? false : mirrorY;
+    auto canonical = bearfield::orientFrame(message.depth,mount);
+    if (event.deviceSettings) {
+        const auto& gesture = message.gesture;
+        event.field.present = gesture.present;
+        event.field.xNorm12 = gesture.x;
+        event.field.yNorm12 = gesture.y;
+        event.field.zNorm12 = gesture.z;
+        event.field.xMilli = gesture.centroidX;
+        event.field.yMilli = gesture.centroidY;
+        event.field.spankHeld = gesture.spank;
+        event.presenceGate = gesture.presence;
+    } else {
+        event.field = processor.process(canonical,message.capture);
+    }
+    for (size_t i=0;i<64;++i)
+        event.mm[i] = (canonical.validMask>>i)&1u ? canonical.distanceMm[i] : 0;
+    if (event.field.present)
+        event.point = static_cast<int>(std::round(event.field.yMilli*7.f/1000.f))*8 +
+                      static_cast<int>(std::round(event.field.xMilli*7.f/1000.f));
+    return event;
+}
+
 }
 
 struct BearaminVirtual : Module {
@@ -125,6 +159,7 @@ struct BearaminVirtual : Module {
     std::atomic<State> state{DISCONNECTED};
     std::atomic<int> rotation{0};
     std::atomic<bool> mirrorX{false}, mirrorY{false};
+    std::atomic<bool> followDeviceSettings{true};
     std::array<std::atomic<uint16_t>,64> display{};
     std::atomic<int> point{-1};
     std::mutex selectionMutex;
@@ -192,14 +227,8 @@ struct BearaminVirtual : Module {
                                     if (static_cast<int32_t>(m.seq-seq)>0) {
                                         seq=m.seq; last=Clock::now();
                                         if (m.frame) {
-                                            bearfield::SensorMountConfig mount{};
-                                            mount.rawToCanonical.rotation = static_cast<bearfield::QuarterTurns>(rotation.load());
-                                            mount.rawToCanonical.mirrorX=mirrorX.load(); mount.rawToCanonical.mirrorY=mirrorY.load();
-                                            auto canonical=bearfield::orientFrame(m.depth,mount);
-                                            auto field=processor.process(canonical,m.capture);
-                                            Event e{}; e.state=STREAMING; e.field=field;
-                                            for (size_t j=0;j<64;++j) e.mm[j] = (canonical.validMask>>j)&1u ? canonical.distanceMm[j] : 0;
-                                            if (field.present) e.point = static_cast<int>(std::round(field.yMilli*7.f/1000.f))*8 + static_cast<int>(std::round(field.xMilli*7.f/1000.f));
+                                            Event e=frameEvent(m,followDeviceSettings.load(),rotation.load(),
+                                                               mirrorX.load(),mirrorY.load(),processor);
                                             push(e); state.store(STREAMING);
                                         } else { push(Event{m.state}); state.store(m.state); }
                                     }
@@ -233,6 +262,7 @@ struct BearaminVirtual : Module {
         bool safe = !haveFrame || age>0.25f || s!=STREAMING;
         if (age>0.25f && s==STREAMING) state.store(STALE);
         voltage.step(latest.field,safe,params[RANGE_PARAM].getValue(),params[SLEW_PARAM].getValue(),args.sampleTime);
+        if (latest.deviceSettings) voltage.presence = !safe && latest.presenceGate ? 5.f : 0.f;
         for (int i=0;i<6;++i) outputs[i].setVoltage(voltage.cv[i]);
         outputs[PRES_OUTPUT].setVoltage(voltage.presence);
         outputs[SPANK_OUTPUT].setVoltage(voltage.spank);
@@ -240,12 +270,15 @@ struct BearaminVirtual : Module {
     json_t* dataToJson() override {
         json_t* root=json_object(); std::string p=port();
         json_object_set_new(root,"port",json_string(p.c_str()));
+        json_object_set_new(root,"followDeviceSettings",json_boolean(followDeviceSettings.load()));
         json_object_set_new(root,"rotation",json_integer(rotation.load()));
         json_object_set_new(root,"mirrorX",json_boolean(mirrorX.load()));
         json_object_set_new(root,"mirrorY",json_boolean(mirrorY.load()));
         return root;
     }
     void dataFromJson(json_t* root) override {
+        // Existing patches retain their local orientation and feel until opted in.
+        followDeviceSettings.store(json_is_true(json_object_get(root,"followDeviceSettings")));
         json_t* j=json_object_get(root,"port"); if (json_is_string(j)) selectPort(json_string_value(j));
         j=json_object_get(root,"rotation"); if (json_is_integer(j)) rotation.store(std::max(0,std::min(3,static_cast<int>(json_integer_value(j)))));
         j=json_object_get(root,"mirrorX"); if (json_is_boolean(j)) mirrorX.store(json_is_true(j));
@@ -288,7 +321,14 @@ struct BearaminVirtualWidget : ModuleWidget {
         menu->addChild(createCheckMenuItem("None","",[m]{return m->port().empty();},[m]{m->selectPort("");}));
         for (auto& p:ports()) menu->addChild(createCheckMenuItem(p,"",[m,p]{return m->port()==p;},[m,p]{m->selectPort(p);}));
         menu->addChild(createMenuLabel("State: "+std::string([](State s){switch(s){case CONNECTING:return "connecting";case STREAMING:return "streaming";case STALE:return "stale";case SENSOR_INIT:return "sensor init";case SENSOR_FAULT:return "sensor fault";case UNSUPPORTED:return "unsupported protocol";case BUSY:return "port busy";default:return "disconnected";}}(m->state.load()))));
-        menu->addChild(createMenuLabel("Orientation"));
+        menu->addChild(createCheckMenuItem("Follow Field Guide settings","",
+            [m]{return m->followDeviceSettings.load();},
+            [m]{m->followDeviceSettings.store(!m->followDeviceSettings.load());}));
+        if (m->followDeviceSettings.load()) {
+            menu->addChild(createMenuLabel("Requires Virtual firmware 0.3.0.5 or newer"));
+            return;
+        }
+        menu->addChild(createMenuLabel("Patch orientation"));
         for (int turn=0;turn<4;++turn) menu->addChild(createCheckMenuItem(std::to_string(turn*90)+" degrees","",[m,turn]{return m->rotation.load()==turn;},[m,turn]{m->rotation.store(turn);}));
         menu->addChild(createCheckMenuItem("Mirror X","",[m]{return m->mirrorX.load();},[m]{m->mirrorX.store(!m->mirrorX.load());}));
         menu->addChild(createCheckMenuItem("Mirror Y","",[m]{return m->mirrorY.load();},[m]{m->mirrorY.store(!m->mirrorY.load());}));

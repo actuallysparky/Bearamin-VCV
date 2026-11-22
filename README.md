@@ -1,4 +1,4 @@
-<!-- {"canonical_sha256": "331ea8f6ce367038027ca26f6992bd78808152aeb45145f1fe663272705acb36", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
+<!-- {"canonical_sha256": "37e133c9580a43bc6f1a7680592c9874d38ee8f8f3bbba65c284f7bdd8f3562a", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
 
 # Bearamin for VCV Rack
 
@@ -25,7 +25,9 @@ SloFO starts immediately. The context menu offers phase selection. Power off giv
 
 Connect the RP2040-Zero/VL53L7CX Bearamin Virtual controller, add **Lite**, and choose its USB serial port in the module context menu. The depth field appears in the matrix. Range scales the six CVs; Slew smooths them. X/Y/Z have 0–5 V and −5–5 V outputs; Presence and Spank are 0/5 V gates. The panel's HOLD jack is the Spank output.
 
-Rotation, mirroring and port selection are saved in the patch. Boot, sensor faults, disconnects and data older than 250 ms force all outputs to zero immediately. Virtual protocol v1 and the existing Bearfield processing are preserved. A fresh valid frame is required after loading a patch. Select a device only in one plugin instance, and close other serial readers before connecting it here. Virtual's separate USB MIDI interface can remain in use by a DAW.
+With Bearamin plugin 2.1.2 and Virtual firmware 0.3.0.5 or newer, new modules follow the saved Field Guide settings for rotation, mirror, sensing limits, detection, curves, inversion, smoothing and gates. Save changes in Field Guide to apply them to MIDI and Rack. Range and Slew remain on the Rack panel.
+
+For an existing patch, enable **Follow Field Guide settings** in the module context menu. Existing patches retain their prior local processing until you opt in. Turn it off to use patch-local orientation and the original feel. Older firmware also falls back to that processing. Port selection, orientation and the follow preference are saved with the patch. Boot, sensor faults, disconnects and data older than 250 ms force all outputs to zero immediately. Virtual protocol v1 and the existing Bearfield processing are preserved. A fresh valid frame is required after loading a patch. Select a device only in one plugin instance, and close other serial readers before connecting it here. Virtual's separate USB MIDI interface can remain in use by a DAW.
 
 ## Install and build
 
@@ -36,7 +38,7 @@ make -j2 RACK_DIR=/absolute/path/to/Rack-SDK
 make dist RACK_DIR=/absolute/path/to/Rack-SDK
 ```
 
-The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.1-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Lite**.
+The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.2-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Lite**.
 
 Linux packages built on Ubuntu 22.04 require glibc 2.35 or later. Windows x64, Linux x64, Intel Mac and Apple Silicon Mac builds are covered by the build workflow.
 
@@ -61,7 +63,7 @@ With Python 3, a C++17 compiler, `pkg-config`, Jansson and `zstd` installed:
 ```sh
 ./test.sh
 ./test.sh --rack /absolute/path/to/Rack-SDK
-python3 tools/check_package.py dist/Bearamin-2.1.1-<platform>.vcvplugin
+python3 tools/check_package.py dist/Bearamin-2.1.2-<platform>.vcvplugin
 ```
 
 On Windows, running the SDK tests also requires the matching Rack `libRack.dll` on `PATH`; the SDK itself includes only its import library. CI extracts that DLL from the official Rack Free installer without running the installer.

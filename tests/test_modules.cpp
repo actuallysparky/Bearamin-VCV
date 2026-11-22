@@ -5,6 +5,7 @@
 #include "../src/lite/BearaminVirtual.cpp"
 #include <cassert>
 #include <iostream>
+#include <fstream>
 
 rack::engine::Engine* createTestEngine();
 
@@ -12,7 +13,7 @@ static void closeTo(double actual, double expected, double tolerance = 1e-5) {
     assert(std::abs(actual - expected) < tolerance);
 }
 
-int main() {
+int main(int argc, char** argv) {
     Context context;
     context.engine = createTestEngine();
     contextSet(&context);
@@ -52,7 +53,11 @@ int main() {
         json_t* savedModule = restored->toJson();
         assert(std::string(json_string_value(json_object_get(savedModule, "model"))) == slug);
         assert(json_integer_value(json_object_get(savedModule, "id")) == 9);
-        assert(json_equal(json_object_get(old, "data"), json_object_get(savedModule, "data")));
+        assert(!restored->followDeviceSettings.load());
+        json_t* savedData=json_object_get(savedModule,"data");
+        assert(json_is_false(json_object_get(savedData,"followDeviceSettings")));
+        json_object_del(savedData,"followDeviceSettings");
+        assert(json_equal(json_object_get(old,"data"),savedData));
         closeTo(restored->params[0].getValue(), 0.7);
         json_decref(savedModule); json_decref(old);
         delete restored;
@@ -138,8 +143,47 @@ int main() {
                                    "mirrorX", 1, "mirrorY", 0);
     lite.dataFromJson(orientation);
     json_t* orientationCopy = lite.dataToJson();
+    assert(!lite.followDeviceSettings.load());
+    assert(json_is_false(json_object_get(orientationCopy,"followDeviceSettings")));
+    json_object_del(orientationCopy,"followDeviceSettings");
     assert(json_equal(orientation, orientationCopy));
+    json_object_set_new(orientation,"followDeviceSettings",json_true());
+    lite.dataFromJson(orientation);
+    assert(lite.followDeviceSettings.load());
     json_decref(orientationCopy); json_decref(orientation);
+    // Real firmware fixtures traverse the actual parser, serial-to-event path,
+    // audio-thread CV conversion and patch preference restoration.
+    {
+        std::ifstream fixtures(argc == 2 ? argv[1] : "tests/fixtures/field-guide-gestures.jsonl");assert(fixtures.good());
+        std::string line;unsigned count=0;
+        while(std::getline(fixtures,line)) {
+            Message message{};bool unsupported=false;
+            assert(parseLine(line,message,unsupported) && message.gesture.available);
+            bearfield::Processor processor(bearfield::BearCvV1());
+            auto event=frameEvent(message,true,3,true,true,processor);
+            assert(event.deviceSettings); // patch transforms must not run twice
+            lite.params[BearaminVirtual::RANGE_PARAM].setValue(1);
+            lite.params[BearaminVirtual::SLEW_PARAM].setValue(0);
+            lite.push(event);lite.state.store(STREAMING);lite.process(args);
+            const auto& g=message.gesture;
+            unsigned norm[]={g.x,g.y,g.z};
+            for(int axis=0;axis<3;++axis) {
+                closeTo(lite.outputs[axis].getVoltage(),g.present?5.f*norm[axis]/4095.f:0.f);
+                closeTo(lite.outputs[axis+3].getVoltage(),g.present?5.f*(2.f*norm[axis]/4095.f-1.f):0.f);
+            }
+            closeTo(lite.outputs[BearaminVirtual::PRES_OUTPUT].getVoltage(),g.presence?5:0);
+            closeTo(lite.outputs[BearaminVirtual::SPANK_OUTPUT].getVoltage(),g.spank?5:0);
+            lite.params[BearaminVirtual::RANGE_PARAM].setValue(.5f);
+            lite.process(args);closeTo(lite.outputs[0].getVoltage(),g.present?2.5f*g.x/4095.f:0.f);
+            lite.state.store(SENSOR_FAULT);lite.process(args);
+            for(auto& output:lite.outputs)closeTo(output.getVoltage(),0);
+            auto legacy=frameEvent(message,false,0,false,false,processor);
+            assert(!legacy.deviceSettings);
+            ++count;
+        }
+        assert(count==384);
+        std::cout << "384 firmware-to-Rack configurations, gates, Range and fault cases passed\n";
+    }
     plugin::plugins.clear();
     json_decref(roundtrip); json_decref(saved); json_decref(manifest);
     std::cout << "Actual Rack modules: registration, immediate start/resume, saved state, CV and fault/stale checks passed\n";

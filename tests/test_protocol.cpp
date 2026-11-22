@@ -21,4 +21,13 @@ int main() {
     Message status{}; assert(parseLine("{\"v\":1,\"type\":\"status\",\"boot\":1,\"seq\":2,\"capture_us\":3,\"state\":\"sensor_fault\"}",status,unsupported));
     assert(!status.frame && status.state==SENSOR_FAULT);
     Message v{}; assert(!parseLine("{\"v\":2,\"type\":\"status\"}",v,unsupported) && unsupported);
+    // The optional processed gesture extension is strict while legacy v1 stays valid.
+    std::string extended=prefix.substr(0,prefix.size()-1)+R"(,"gesture":{"v":1,"x":1024,"y":2048,"z":4095,"cx":250,"cy":500,"present":true,"presence":false,"spank":true,"rotation":1,"mirror":true}})";
+    Message processed{};assert(parseLine(extended,processed,unsupported));
+    assert(processed.gesture.available && processed.gesture.x==1024 && !processed.gesture.presence);
+    for(const auto& change: {std::pair<std::string,std::string>{"1024","4096"},{"\"rotation\":1","\"rotation\":4"},{"\"present\":true","\"present\":false"},{"\"mirror\":true","\"mirror\":1"}}) {
+        std::string bad=extended;auto at=bad.find(change.first);assert(at!=std::string::npos);
+        bad.replace(at,change.first.size(),change.second);checkBad(bad);
+    }
+
 }

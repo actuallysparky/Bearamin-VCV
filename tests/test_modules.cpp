@@ -53,9 +53,9 @@ int main(int argc, char** argv) {
         json_t* savedModule = restored->toJson();
         assert(std::string(json_string_value(json_object_get(savedModule, "model"))) == slug);
         assert(json_integer_value(json_object_get(savedModule, "id")) == 9);
-        assert(!restored->followDeviceSettings.load());
+        assert(restored->followDeviceSettings.load());
         json_t* savedData=json_object_get(savedModule,"data");
-        assert(json_is_false(json_object_get(savedData,"followDeviceSettings")));
+        assert(json_is_true(json_object_get(savedData,"followDeviceSettings")));
         json_object_del(savedData,"followDeviceSettings");
         assert(json_equal(json_object_get(old,"data"),savedData));
         closeTo(restored->params[0].getValue(), 0.7);
@@ -143,10 +143,13 @@ int main(int argc, char** argv) {
                                    "mirrorX", 1, "mirrorY", 0);
     lite.dataFromJson(orientation);
     json_t* orientationCopy = lite.dataToJson();
-    assert(!lite.followDeviceSettings.load());
-    assert(json_is_false(json_object_get(orientationCopy,"followDeviceSettings")));
+    assert(lite.followDeviceSettings.load());
+    assert(json_is_true(json_object_get(orientationCopy,"followDeviceSettings")));
     json_object_del(orientationCopy,"followDeviceSettings");
     assert(json_equal(orientation, orientationCopy));
+    json_object_set_new(orientation,"followDeviceSettings",json_false());
+    lite.dataFromJson(orientation);
+    assert(!lite.followDeviceSettings.load());
     json_object_set_new(orientation,"followDeviceSettings",json_true());
     lite.dataFromJson(orientation);
     assert(lite.followDeviceSettings.load());

@@ -277,8 +277,9 @@ struct BearaminVirtual : Module {
         return root;
     }
     void dataFromJson(json_t* root) override {
-        // Existing patches retain their local orientation and feel until opted in.
-        followDeviceSettings.store(json_is_true(json_object_get(root,"followDeviceSettings")));
+        // Saved device preferences also apply to patches made before this option existed.
+        json_t* follow=json_object_get(root,"followDeviceSettings");
+        followDeviceSettings.store(!follow || json_is_true(follow));
         json_t* j=json_object_get(root,"port"); if (json_is_string(j)) selectPort(json_string_value(j));
         j=json_object_get(root,"rotation"); if (json_is_integer(j)) rotation.store(std::max(0,std::min(3,static_cast<int>(json_integer_value(j)))));
         j=json_object_get(root,"mirrorX"); if (json_is_boolean(j)) mirrorX.store(json_is_true(j));

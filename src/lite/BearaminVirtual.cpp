@@ -4,6 +4,7 @@
 #include "../plugin.hpp"
 #include "protocol.hpp"
 #include "output.hpp"
+#include "field_preview.hpp"
 #include "panel_layout.hpp"
 #include <bearfield/bearfield.h>
 #include <array>
@@ -115,6 +116,7 @@ struct Event {
     std::array<uint16_t,64> mm{};
     int point = -1;
     bool deviceSettings = false, presenceGate = false;
+    uint16_t nearMm = 60, farMm = 750;
     Event() = default;
     explicit Event(State s) : state(s) {}
 };
@@ -140,6 +142,10 @@ Event frameEvent(const Message& message, bool followDevice, int rotation,
         event.field.yMilli = gesture.centroidY;
         event.field.spankHeld = gesture.spank;
         event.presenceGate = gesture.presence;
+        if (gesture.rangeAvailable) {
+            event.nearMm = gesture.nearMm;
+            event.farMm = gesture.farMm;
+        }
     } else {
         event.field = processor.process(canonical,message.capture);
     }
@@ -160,6 +166,7 @@ struct BearaminVirtual : Module {
     std::atomic<int> rotation{0};
     std::atomic<bool> mirrorX{false}, mirrorY{false};
     std::atomic<bool> followDeviceSettings{true};
+    std::atomic<uint32_t> displayRange{60u | (750u << 16)};
     std::array<std::atomic<uint16_t>,64> display{};
     std::atomic<int> point{-1};
     std::mutex selectionMutex;
@@ -253,7 +260,7 @@ struct BearaminVirtual : Module {
             latest=queue[r%queue.size()]; ++r;
             age=0.f;
             haveFrame=latest.state==STREAMING;
-            if (haveFrame) { for (size_t i=0;i<64;++i) display[i].store(latest.mm[i]); point.store(latest.point); }
+            if (haveFrame) { for (size_t i=0;i<64;++i) display[i].store(latest.mm[i]); point.store(latest.point); displayRange.store(uint32_t(latest.nearMm) | (uint32_t(latest.farMm) << 16)); }
             else { for (auto& cell:display) cell.store(0); point.store(-1); }
         }
         tail.store(r,std::memory_order_release);
@@ -293,10 +300,12 @@ struct FieldWidget : widget::Widget {
         nvgBeginPath(args.vg); nvgRoundedRect(args.vg,0,0,box.size.x,box.size.y,4); nvgFillColor(args.vg,nvgRGB(8,19,22)); nvgFill(args.vg);
         if (!module) return;
         float cell=box.size.x/8.f;
+        const uint32_t range=module->displayRange.load();
         for (int y=0;y<8;++y) for(int x=0;x<8;++x) {
             int i=y*8+x; uint16_t mm=module->display[i].load();
             if (!mm) continue;
-            float strength=std::max(0.f,std::min(1.f,(750.f-mm)/690.f));
+            float strength=bearamin_virtual_preview::strength(mm,range & 0xffffu,range >> 16);
+            if (strength < 0.f) continue;
             nvgBeginPath(args.vg); nvgRect(args.vg,x*cell+1,y*cell+1,cell-2,cell-2);
             nvgFillColor(args.vg,nvgRGB(static_cast<unsigned char>(40+170*strength),static_cast<unsigned char>(90+130*strength),140)); nvgFill(args.vg);
         }

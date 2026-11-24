@@ -25,6 +25,13 @@ int main() {
     std::string extended=prefix.substr(0,prefix.size()-1)+R"(,"gesture":{"v":1,"x":1024,"y":2048,"z":4095,"cx":250,"cy":500,"present":true,"presence":false,"spank":true,"rotation":1,"mirror":true}})";
     Message processed{};assert(parseLine(extended,processed,unsupported));
     assert(processed.gesture.available && processed.gesture.x==1024 && !processed.gesture.presence);
+    assert(!processed.gesture.rangeAvailable); // 0.3.0.5 stays compatible
+    auto ranged=extended; ranged.insert(ranged.size()-2,",\"near\":100,\"far\":300");
+    Message withRange{};assert(parseLine(ranged,withRange,unsupported));
+    assert(withRange.gesture.rangeAvailable && withRange.gesture.nearMm==100 && withRange.gesture.farMm==300);
+    for (const auto& replacement : {std::string(",\"near\":300,\"far\":100"),std::string(",\"near\":19,\"far\":300"),std::string(",\"near\":100,\"far\":1501"),std::string(",\"near\":100")}) {
+        auto invalid=extended;invalid.insert(invalid.size()-2,replacement);checkBad(invalid);
+    }
     for(const auto& change: {std::pair<std::string,std::string>{"1024","4096"},{"\"rotation\":1","\"rotation\":4"},{"\"present\":true","\"present\":false"},{"\"mirror\":true","\"mirror\":1"}}) {
         std::string bad=extended;auto at=bad.find(change.first);assert(at!=std::string::npos);
         bad.replace(at,change.first.size(),change.second);checkBad(bad);

@@ -1,4 +1,4 @@
-<!-- {"canonical_sha256": "3b7794ff610a09ecf12772a747ed5e7f5119c6dff88d6b58ed87abeb2c17532b", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
+<!-- {"canonical_sha256": "1a5d04046af601fd06466d09f63487da79023c192460aaa2e7842e39b7eb735d", "canonical_source": "engineering:Bearamin-VCV/README", "editing": "Edit the canonical Obsidian source; regenerate this copy.", "generated": true, "vault_commit": null} -->
 
 # Bearamin for VCV Rack
 
@@ -38,7 +38,7 @@ make -j2 RACK_DIR=/absolute/path/to/Rack-SDK
 make dist RACK_DIR=/absolute/path/to/Rack-SDK
 ```
 
-The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.2-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Lite**.
+The root Makefile and plugin.json are the plugin entrypoints. Artwork and the pinned Bearfield header are included; a build needs no sibling repository, firmware toolchain or KiCad. The package is `dist/Bearamin-2.1.3-<platform>.vcvplugin`. Close Rack, copy the package to its user folder's matching `plugins-<platform>` directory, then restart Rack. Search for **Bearamin** to find **SloFO** and **Lite**.
 
 Linux packages built on Ubuntu 22.04 require glibc 2.35 or later. Windows x64, Linux x64, Intel Mac and Apple Silicon Mac builds are covered by the build workflow.
 
@@ -63,7 +63,7 @@ With Python 3, a C++17 compiler, `pkg-config`, Jansson and `zstd` installed:
 ```sh
 ./test.sh
 ./test.sh --rack /absolute/path/to/Rack-SDK
-python3 tools/check_package.py dist/Bearamin-2.1.2-<platform>.vcvplugin
+python3 tools/check_package.py dist/Bearamin-2.1.3-<platform>.vcvplugin
 ```
 
 On Windows, running the SDK tests also requires the matching Rack `libRack.dll` on `PATH`; the SDK itself includes only its import library. CI extracts that DLL from the official Rack Free installer without running the installer.
@@ -75,3 +75,5 @@ The SDK test exercises the actual module classes without opening a hardware port
 The collection brings together the Rack work from [SloFO](https://github.com/actuallysparky/SloLFO) and [Bearamin Virtual](https://github.com/actuallysparky/bearamin/tree/main/bearamin-virtual). Hardware and firmware continue in those repositories. SloFO was inspired by Patience, with thanks to the wonders of slow time. The shared Bearfield processor comes from the Bearamin project. Panel artwork is derived from the corresponding SloFO and Bearamin Lite faceplates; checked-in SVGs are the build inputs.
 
 Plugin code is GPL-3.0-or-later; Bearfield retains its MIT license. Both notices are included in each package. [Bearamin family, hardware and credits](https://github.com/actuallysparky/bearamin).
+
+With Virtual firmware 0.3.0.6 and Rack plugin 2.1.3, the Field Guide and Rack grids use the saved Near/Far distances. Near is full brightness, Far is the dim edge, and farther cells are inactive. Unsaved edits do not alter the live preview. CV processing is unchanged. Older Virtual firmware remains usable; Rack falls back to its previous display range when range metadata is absent.

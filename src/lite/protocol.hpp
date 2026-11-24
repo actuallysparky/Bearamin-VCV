@@ -17,6 +17,8 @@ inline bool uintField(json_t* root, const char* key, uint64_t max, uint64_t& val
 struct DeviceGesture {
     bool available = false, present = false, presence = false, spank = false;
     uint16_t x = 0, y = 0, z = 0, centroidX = 0, centroidY = 0;
+    uint16_t nearMm = 60, farMm = 750;
+    bool rangeAvailable = false;
     unsigned rotation = 0;
     bool mirror = false;
 };
@@ -33,6 +35,12 @@ inline bool parseGesture(json_t* object, DeviceGesture& out) {
     out.presence = json_is_true(json_object_get(object,"presence"));
     out.spank = json_is_true(json_object_get(object,"spank"));
     if ((out.presence || out.spank) && !out.present) return false;
+    if (json_object_get(object,"near") || json_object_get(object,"far")) {
+        uint64_t nearValue = 0, farValue = 0;
+        if (!uintField(object,"near",1000,nearValue) || nearValue < 20 ||
+            !uintField(object,"far",1500,farValue) || farValue < 50 || nearValue >= farValue) return false;
+        out.nearMm = nearValue; out.farMm = farValue; out.rangeAvailable = true;
+    }
     out.x = x; out.y = y; out.z = z; out.rotation = rotation;
     out.centroidX = cx; out.centroidY = cy;
     out.mirror = json_is_true(json_object_get(object,"mirror"));

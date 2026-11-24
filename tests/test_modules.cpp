@@ -169,6 +169,13 @@ int main(int argc, char** argv) {
             lite.params[BearaminVirtual::SLEW_PARAM].setValue(0);
             lite.push(event);lite.state.store(STREAMING);lite.process(args);
             const auto& g=message.gesture;
+            if (g.rangeAvailable) {
+                assert(event.nearMm==g.nearMm && event.farMm==g.farMm);
+                assert(lite.displayRange.load()==(uint32_t(g.nearMm) | (uint32_t(g.farMm)<<16)));
+                for (unsigned i=0;i<64;++i)
+                    assert(bearamin_virtual_preview::strength(event.mm[i],g.nearMm,g.farMm)==
+                           bearamin_virtual_preview::strength(lite.display[i].load(),g.nearMm,g.farMm));
+            }
             unsigned norm[]={g.x,g.y,g.z};
             for(int axis=0;axis<3;++axis) {
                 closeTo(lite.outputs[axis].getVoltage(),g.present?5.f*norm[axis]/4095.f:0.f);

@@ -1,8 +1,15 @@
 #include "../src/lite/output.hpp"
+#include "../src/lite/field_preview.hpp"
 #include <cassert>
 #include <cmath>
 
 int main() {
+    using bearamin_virtual_preview::strength;
+    assert(strength(0,100,300)<0 && strength(301,100,300)<0);
+    assert(strength(50,100,300)==1 && strength(100,100,300)==1);
+    assert(strength(200,100,300)==0.5f && strength(300,100,300)==0);
+    assert(strength(300,300,300)<0);
+    assert(strength(500,100,300)<0 && strength(500,100,900)==0.5f);
     bearamin_virtual_output::OutputState out;
     bearfield::ProcessedFieldState field{};
     field.present=true; field.spankHeld=true;
